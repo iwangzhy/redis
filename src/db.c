@@ -1823,6 +1823,7 @@ int keyIsExpired(redisDb *db, robj *key) {
  * or returns KEY_DELETED if the key is expired and deleted. */
 keyStatus expireIfNeeded(redisDb *db, robj *key, int flags) {
     if (server.lazy_expire_disabled) return KEY_VALID;
+    // 判断 key 有没有过期
     if (!keyIsExpired(db,key)) return KEY_VALID;
 
     /* If we are running in the context of a replica, instead of

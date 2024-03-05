@@ -912,6 +912,10 @@ struct RedisModuleDigest {
 struct redisObject {
     unsigned type:4;
     unsigned encoding:4;
+    // 位字段语法
+    // 可以让你指定一个整数类型的成员只使用固定数量的位
+    // lru 字段只会使用 LRU_BITS 位的内存空间，而不是整个 unsigned int 类型通常使用的 32 位或 64 位。
+    // 这有助于节省内存，特别是在需要存储大量这种对象时。
     unsigned lru:LRU_BITS; /* LRU time (relative to global lru_clock) or
                             * LFU data (least significant 8 bits frequency
                             * and most significant 16 bits access time). */
@@ -975,6 +979,17 @@ typedef struct replBufBlock {
  * by integers from 0 (the default database) up to the max configured
  * database. The database number is the 'id' field in the structure. */
 typedef struct redisDb {
+    // 数据库建空间，保存着数据库中所有键值对
+    // 键空间和用户所见的数据库时直接对应的
+    // 对数据库的操作，实际上就是对 *keys 中的 *dict 中的键值对的操作。
+    // 例如，新增一个键值对，就是将这个键值对添加到 *keys 中的 *dict 中。
+    // 增 SET date "2024.3.5"
+    // 删 DEL date
+    // 改 SET message "hello"
+    // FLUSHDB 就是删除 *keys 中的 *dict 的所有键值对来实现的
+    // RANDOMKEY 就是从 *keys 中的 *dict 中随机取一个键值对来实现的
+    // DBSIZE、EXISTS、RENAME、KEYS、SCAN 等命令都是通过对 *keys 中的 *dict 进行操作来实现的
+    // 存放了 redisObject 对象
     kvstore *keys;              /* The keyspace for this DB */
     kvstore *expires;           /* Timeout of keys with a timeout set */
     dict *blocking_keys;        /* Keys with clients waiting for data (BLPOP)*/
@@ -1164,6 +1179,7 @@ typedef struct client {
     uint64_t flags;         /* Client flags: CLIENT_* macros. */
     connection *conn;
     int resp;               /* RESP protocol version. Can be 2 or 3. */
+    // 记录客户端正在使用的数据库
     redisDb *db;            /* Pointer to currently SELECTed DB. */
     robj *name;             /* As set by CLIENT SETNAME. */
     robj *lib_name;         /* The client library name as set by CLIENT SETINFO. */
@@ -1558,6 +1574,7 @@ struct redisServer {
     mode_t umask;               /* The umask value of the process on startup */
     int hz;                     /* serverCron() calls frequency in hertz */
     int in_fork_child;          /* indication that this is a fork child */
+    // 一个 数组，保存着服务器中的所有数据库
     redisDb *db;
     dict *commands;             /* Command table */
     dict *orig_commands;        /* Command table before command renaming. */
@@ -1751,6 +1768,7 @@ struct redisServer {
     int active_defrag_cycle_max;       /* maximal effort for defrag in CPU percentage */
     unsigned long active_defrag_max_scan_fields; /* maximum number of fields of set/hash/zset/list to process from within the main dict scan */
     size_t client_max_querybuf_len; /* Limit for client query buffer length */
+    // 服务器数据库的数量
     int dbnum;                      /* Total number of configured DBs */
     int supervised;                 /* 1 if supervised, 0 otherwise. */
     int supervised_mode;            /* See SUPERVISED_* */

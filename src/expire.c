@@ -598,7 +598,9 @@ int parseExtendedExpireArgumentsOrReply(client *c, int *flags) {
  * the argv[2] parameter. The basetime is always specified in milliseconds.
  *
  * Additional flags are supported and parsed via parseExtendedExpireArguments */
+ // long long 64 位整型
 void expireGenericCommand(client *c, long long basetime, int unit) {
+    // 从命令行中获取2个参数，第一个是key，第二个是过期时间
     robj *key = c->argv[1], *param = c->argv[2];
     long long when; /* unix time in milliseconds when the key will expire. */
     long long current_expire = -1;
@@ -780,6 +782,7 @@ void pexpiretimeCommand(client *c) {
 }
 
 /* PERSIST key */
+// 移除键的过期时间
 void persistCommand(client *c) {
     if (lookupKeyWrite(c->db,c->argv[1])) {
         if (removeExpire(c->db,c->argv[1])) {
