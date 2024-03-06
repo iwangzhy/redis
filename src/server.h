@@ -1309,7 +1309,9 @@ typedef struct aclInfo {
 } aclInfo;
 
 struct saveparam {
+    // 秒数
     time_t seconds;
+    // 修改数
     int changes;
 };
 
@@ -1823,10 +1825,17 @@ struct redisServer {
                                         default no. (for testings). */
 
     /* RDB persistence */
+    // 记录从上次 save 之后的数据库的修改次数
     long long dirty;                /* Changes to DB from the last save */
+    // 记录 bgsave 命令开始执行时 dirty 的值。 代码见  rdb.c/rdbSaveBackground
+    //
     long long dirty_before_bgsave;  /* Used to restore dirty on failed BGSAVE */
     long long rdb_last_load_keys_expired;  /* number of expired keys when loading RDB */
     long long rdb_last_load_keys_loaded;   /* number of loaded keys when loading RDB */
+    // 记录了保存条件的数组
+    // 因为 Redis 允许用户设置多个持久化的策略
+    // 提供了灵活性，允许 Redis 根据不同的负载和更新频率来优化其数据持久化过程。
+    // 用户可以根据实际情况来平衡数据安全性和性能。
     struct saveparam *saveparams;   /* Save points array for RDB */
     int saveparamslen;              /* Number of saving points */
     char *rdb_filename;             /* Name of RDB file */
@@ -1834,6 +1843,7 @@ struct redisServer {
     int rdb_checksum;               /* Use RDB checksum? */
     int rdb_del_sync_files;         /* Remove RDB files used only for SYNC if
                                        the instance does not use persistence. */
+    // 记录上一次成功执行 save 命令或者 bgsave 命令的时间
     time_t lastsave;                /* Unix time of last successful save */
     time_t lastbgsave_try;          /* Unix time of last attempted bgsave */
     time_t rdb_save_time_last;      /* Time used by last RDB save run. */

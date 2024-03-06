@@ -1269,14 +1269,16 @@ void cronUpdateMemoryStats(void) {
 
 int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     int j;
+    // 表明这个方法不使用这几个参数
     UNUSED(eventLoop);
     UNUSED(id);
     UNUSED(clientData);
 
     /* Software watchdog: deliver the SIGALRM that will reach the signal
      * handler if we don't return here fast enough. */
+    // 用于在 Redis 主循环无法在指定时间内返回时发出警告
     if (server.watchdog_period) watchdogScheduleSignal(server.watchdog_period);
-
+    // 心跳频率
     server.hz = server.config_hz;
     /* Adapt the server.hz value to the number of configured clients. If we have
      * many clients, we want to call serverCron() with an higher frequency. */
@@ -1295,6 +1297,7 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     /* for debug purposes: skip actual cron work if pause_cron is on */
     if (server.pause_cron) return 1000/server.hz;
 
+    // cron 任务开始时间
     monotime cron_start = getMonotonicUs();
 
     run_with_period(100) {

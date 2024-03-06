@@ -3445,6 +3445,8 @@ static void backgroundSaveDoneHandlerDisk(int exitcode, int bysignal, time_t sav
     if (!bysignal && exitcode == 0) {
         serverLog(LL_NOTICE,
             "Background saving terminated with success");
+        // bgsave 命令执行成功时，根据 dirty 和 dirty_before_bgsave 算出当前的 dirty 的值
+        // 执行失败，就不需要用到 dirty_before_bgsave 。
         server.dirty = server.dirty - server.dirty_before_bgsave;
         server.lastsave = save_end;
         server.lastbgsave_status = C_OK;
